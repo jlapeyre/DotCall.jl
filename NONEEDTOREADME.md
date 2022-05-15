@@ -12,7 +12,7 @@
 
 ```julia
 julia> @eval Base import CBOO;
-julia> @eval Base CBOO.@cboo_call String (split,)
+julia> @eval Base CBOO.@cbooify String (split,)
 ```
 
 then we can do this
@@ -40,7 +40,7 @@ Ahhhh... That's much better!
 Ok, so let's fix it.
 
 ```julia
-julia> @eval Base CBOO.@cboo_call String (split=(x,y) -> split(y, x),)
+julia> @eval Base CBOO.@cbooify String (split=(x,y) -> split(y, x),)
 
 julia> print(";".split("a;b;c"))
 SubString{String}["a", "b", "c"]
@@ -60,7 +60,7 @@ Of course, you have to pay for this intuitive syntax with a performance hit, rig
 Pick a fast operation, and put it in the middle of a list, and swap parameter order for no reason.
 
 ```julia
-julia> @eval Base CBOO.@cboo_call Int64 (+, /, length, xor=(x,y)->xor(y,x), floor, rand)
+julia> @eval Base CBOO.@cbooify Int64 (+, /, length, xor=(x,y)->xor(y,x), floor, rand)
 ```
 
 The usual way

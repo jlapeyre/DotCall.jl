@@ -1,6 +1,6 @@
 module MyBs
 
-using CBOO: @cboo_call
+using CBOO: @cbooify
 
 export MyB, x, sx, addto!
 
@@ -10,7 +10,7 @@ end
 
 import Base: sin
 
-@cboo_call MyB callmethod=addto! (x, sx, sin)
+@cbooify MyB callmethod=addto! (x, sx, sin)
 
 function addto!(a::MyB, gate, args...)
     (:addto!, gate(a, args...))

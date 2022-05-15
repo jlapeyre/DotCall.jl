@@ -3,7 +3,7 @@
 [![Build Status](https://github.com/jlapeyre/CBOO.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jlapeyre/CBOO.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/jlapeyre/CBOO.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/jlapeyre/CBOO.jl)
 
-This package provides `@cboo_call` which allows you to write the function call `f(a::A, args...)` as `a.f(args...)` as well.
+This package provides `@cbooify` which allows you to write the function call `f(a::A, args...)` as `a.f(args...)` as well.
 You can use it by adding a single line to your module. Using the alternative call syntax incurs no performance
 penalty.
 
@@ -34,13 +34,13 @@ Prints:
 ```julia
 module Amod
 
-using CBOO: @cboo_call
+using CBOO: @cbooify
 
 struct A
   x::Int
 end
 
-@cboo_call A (f, g)
+@cbooify A (f, g)
 
 f(a::A, x, y) = a.x + x + y
 g(a::A) = a.x
@@ -53,11 +53,11 @@ Then you can write either `Amod.f(a, 1, 2)` or `a.f(1, 2)`.
 For more features and details, see the docstring.
 
 #### Functions and macros
-`@cboo_call`, `add_cboo_calls`, `is_cbooified`, `whichmodule`, `cbooified_properties`.
+`@cbooify`, `add_cboo_calls`, `is_cbooified`, `whichmodule`, `cbooified_properties`.
 
 #### Docstring
 
-    @cboo_call(Type_to_cbooifiy, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
+    @cbooify(Type_to_cbooifiy, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
 
 Allow functions of the form `f1(s::Type_to_cbooifiy, args...)` to also be called with `s.f1(args...)` with no performance penalty.
 
@@ -75,16 +75,16 @@ If `getproperty` is supplied then it is called, rather than `getfield`, when loo
 property that is not on the list of functions. This can be useful if you want further
 specialzed behavior of `getproperty`.
 
-`@cboo_call` must by called after the definition of `Type_to_cbooifiy`, but may
+`@cbooify` must by called after the definition of `Type_to_cbooifiy`, but may
 be called before the functions are defined.
 
 If an entry is not function, then it is returned, rather than called.  For example
-`@cboo_call MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
+`@cbooify MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
 function.
 
 For `a::A`, two additional properties are defined for both `a` and `A`: `__module__` which
-returns the module in which `@cboo_call` was invoked, and `__cboo_list__` which returns
-the list of properties and functions that were passed in the invocation of `@cboo_call`.
+returns the module in which `@cbooify` was invoked, and `__cboo_list__` which returns
+the list of properties and functions that were passed in the invocation of `@cbooify`.
 
 #### Examples:
 
@@ -98,7 +98,7 @@ struct A
     x::Int
 end
 
-CBOO.@cboo_call A (w, z)
+CBOO.@cbooify A (w, z)
 
 w(a::A, y) = a.x + y
 z(a::A, x, y) = a.x + y + x
@@ -120,9 +120,9 @@ julia> a.__cboo_list__
 * The following two calls have the same effect.
 
 ```julia
-@cboo_call(T, (f1, f2, ...))
+@cbooify(T, (f1, f2, ...))
 
-@cboo_call(T, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
+@cbooify(T, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
 ```
 
 

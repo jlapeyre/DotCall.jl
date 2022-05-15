@@ -1,6 +1,6 @@
 module MyCs
 
-using CBOO: @cboo_call
+using CBOO: @cbooify
 
 export MyC, x, s
 
@@ -8,7 +8,7 @@ struct MyC{T}
     data::T
 end
 
-@cboo_call MyC getproperty=mygetfield (f, g)
+@cbooify MyC getproperty=mygetfield (f, g)
 
 mygetfield(c::MyC, sym::Symbol) = getfield(c, sym)
 

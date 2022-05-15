@@ -1,6 +1,6 @@
 module CBOO
 
-export @cboo_call, add_cboo_calls, is_cbooified,
+export @cbooify, add_cboo_calls, is_cbooified,
     cbooified_properties, whichmodule
 
 struct CBOOSyntaxException <: Exception
@@ -36,7 +36,7 @@ isexpr(ex) = isa(ex, Expr)
 ishead(ex, _head) = (isexpr(ex) && ex.head === _head)
 isassign(ex) = ishead(ex, :(=))
 
-function _cboo_call(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproperty=:getfield)
+function _cbooify(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproperty=:getfield)
     nType_to_cbooify = esc(Type_to_cbooify)
     named_tup_pairs = []
     _unesc_named_tup_pairs = []
@@ -109,7 +109,7 @@ function _cboo_call(Type_to_cbooify; functup=:(()), callmethod=nothing, _getprop
 end
 
 """
-    @cboo_call(Type_to_cbooify, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
+    @cbooify(Type_to_cbooify, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
 
 Allow functions of the form `f1(s::Type_to_cbooify, args...)` to also be called with `s.f1(args...)` with no performance penalty.
 
@@ -122,23 +122,23 @@ required to be a symbol. For example `myf = Base._unexportedf`.
 If `callmethod` is supplied, then `s.f1(args...)` is translated to `callmethod(s, f1,
 args...)` instead of `f1(s, args...)`.
 
-`@cboo_call` works by writing methods (or clobbering methods) for the functions
+`@cbooify` works by writing methods (or clobbering methods) for the functions
 `Base.getproperty` and `Base.propertnames`.
 
 `getproperty` must be a function. If supplied, then it is called, rather than `getfield`, when looking up a
 property that is not on the list of functions. This can be useful if you want further
 specialzed behavior of `getproperty`.
 
-`@cboo_call` must by called after the definition of `Type_to_cbooify`, but may
+`@cbooify` must by called after the definition of `Type_to_cbooify`, but may
 be called before the functions are defined.
 
 If an entry is not function, then it is returned, rather than called.  For example
-`@cboo_call MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
+`@cbooify MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
 function.
 
 For `a::A`, two additional properties are defined for both `a` and `A`: `__module__` which
-returns the module in which `@cboo_call` was invoked, and `__cboo_list__` which returns
-the list of properties and functions that were passed in the invocation of `@cboo_call`.
+returns the module in which `@cbooify` was invoked, and `__cboo_list__` which returns
+the list of properties and functions that were passed in the invocation of `@cbooify`.
 
 # Examples:
 
@@ -152,7 +152,7 @@ struct A
     x::Int
 end
 
-CBOO.@cboo_call A (w, z)
+CBOO.@cbooify A (w, z)
 
 w(a::A, y) = a.x + y
 z(a::A, x, y) = a.x + y + x
@@ -174,34 +174,34 @@ julia> a.__cboo_list__
 * The following two calls have the same effect.
 
 ```julia
-@cboo_call(Type_to_cbooify, (f1, f2, ...))
+@cbooify(Type_to_cbooify, (f1, f2, ...))
 
-@cboo_call(Type_to_cbooify, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
+@cbooify(Type_to_cbooify, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
 ```
 """
-macro cboo_call(Type_to_cbooify, args...)
+macro cbooify(Type_to_cbooify, args...)
     _Type_to_cbooify = Core.eval(__module__, Type_to_cbooify)
     is_cbooified(_Type_to_cbooify) && throw(AlreadyCBOOifiedException(_Type_to_cbooify))
     # error("Type $_Type_to_cbooify has already been CBOO-ified. This can only be done once. " *
     #     "Try `add_cboo_calls`.")
-    code = _prep_cboo_call(Type_to_cbooify, args...)
+    code = _prep_cbooify(Type_to_cbooify, args...)
     return code
 end
 
 """
     is_cbooified(::Type{T})
 
-Return `true` if the `@cboo_call` macro has been called on `T`.
+Return `true` if the `@cbooify` macro has been called on `T`.
 """
 is_cbooified(::Type{T}) where T = :__cboo_list__ in propertynames(T, true)
 
 macro _add_cboo_calls(Type_to_cbooify, args...)
     _Type_to_cbooify = Core.eval(__module__, Type_to_cbooify)
-    code = _prep_cboo_call(Type_to_cbooify, args...)
+    code = _prep_cbooify(Type_to_cbooify, args...)
     return code
 end
 
-function _prep_cboo_call(Type_to_cbooify, args...)
+function _prep_cbooify(Type_to_cbooify, args...)
     argd = Dict{Symbol,Any}()
     argd[:functup] = :(())
     argd[:callmethod] = nothing
@@ -211,16 +211,16 @@ function _prep_cboo_call(Type_to_cbooify, args...)
         if istup(arg)
             argd[:functup] = arg
         elseif isassign(arg)
-            length(arg.args) == 2 || error("@cboo_call: Bad assignment")
+            length(arg.args) == 2 || error("@cbooify: Bad assignment")
             (sym, rhs) = (arg.args...,)
-            issym(sym) || error("@cboo_call: LHS is not a symbol")
-            haskey(argd, sym) || error("@cboo_call: Invalid keyword $sym")
+            issym(sym) || error("@cbooify: LHS is not a symbol")
+            haskey(argd, sym) || error("@cbooify: Invalid keyword $sym")
             argd[sym] = rhs
         else
-            error("@cboo_call: Invalid argument $arg")
+            error("@cbooify: Invalid argument $arg")
         end
     end
-    return _cboo_call(Type_to_cbooify; functup=argd[:functup], callmethod=argd[:callmethod], _getproperty=argd[:getproperty])
+    return _cbooify(Type_to_cbooify; functup=argd[:functup], callmethod=argd[:callmethod], _getproperty=argd[:getproperty])
 end
 
 
@@ -233,7 +233,7 @@ a type `CBOOedT` that has already been cboo-ified.
 Only properties that are not already CBOO-ified for `CBooedT` are added. Previous
 added properties will not be updated.
 
-Since `add_cboo_calls` is a function, in contrast to `@cboo_call`,
+Since `add_cboo_calls` is a function, in contrast to `@cbooify`,
 `cboolist` can be a literal container
 (for example `Tuple` or `Vector`) or a variable name bound to a container.
 

@@ -1,6 +1,6 @@
 module MyAs
 
-using CBOO: @cboo_call
+using CBOO: @cbooify
 
 export MyA, x, sx
 
@@ -10,8 +10,8 @@ end
 
 import Base: sin
 
-#@cboo_call MyA nothing getfield (x, sx, sin)
-@cboo_call MyA (sx, x, sin, y = 3, mycos = (a -> Base.cos(a.data)))
+#@cbooify MyA nothing getfield (x, sx, sin)
+@cbooify MyA (sx, x, sin, y = 3, mycos = (a -> Base.cos(a.data)))
 
 sx(a::MyA, x::Int) = a.data + x
 x(a::MyA) = (a.data)^2
