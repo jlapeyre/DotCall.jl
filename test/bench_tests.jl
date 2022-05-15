@@ -1,7 +1,17 @@
 using Printf
+using BenchmarkTools
+
+@testset "bench" begin
+    y2 = MyA(3.0)
+    y2.sx(3)
+    tusual = @belapsed(MyAs.sx($y2, 3))
+    tcboo = @belapsed($y2.sx(3))
+    @show tusual, tcboo
+#    if VERSION
+end
 
 # TODO: Just use BenchmarkTools here
-@testset "bench" begin
+@testset "bench2" begin
     y2 = MyA(3.0)
 
     f_cboo = (_=nothing) -> [y2.sx(i) for i in 1:100];

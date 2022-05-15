@@ -4,6 +4,10 @@
     @test MyAs.sx(y, 4) == 7
     @test y.mycos() == cos(y.data)
     @test y.y == 3
+    @test_throws ErrorException y.cf
+    result = add_cboo_calls(MyA, (:x, :sx, :cf))
+    @test result == [(:cf, :cf)]
+    @test y.cf() == 1
 
     using MyBs: MyB, addto!, MyBs
     z = MyB(3)
@@ -22,10 +26,8 @@ end
     @test propertynames(MyA) == (:var, :body)
     @test propertynames(MyA, true) == (:var, :body, :__cboo_list__, :__cboo_list__expr,
                                        :__cboo_callmethod__, :__cboo_getproperty__, :__module__)
-    #(:var, :body, :__cboo_list__, :__module__)
     @test fieldnames(MyA) == (:data,)
     z = MyA(4.1)
-    @test propertynames(z) == (:data, :sx, :x, :sin, :y, :mycos)
-    @test propertynames(z, true) == (:data, :sx, :x, :sin, :y, :mycos) # removed these  :__cboo_list__, :__module__)
+    @test propertynames(z) == (:data, :sx, :x, :sin, :y, :mycos, :cf)
     @test_throws MethodError fieldnames(z)
 end

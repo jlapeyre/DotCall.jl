@@ -1,17 +1,33 @@
 module CBOO
 
-export @cboo_call, add_cboo_calls, is_cbooified
+export @cboo_call, add_cboo_calls, is_cbooified,
+    cbooified_properties, whichmodule
 
+struct CBOOSyntaxException <: Exception
+    msg::String
+end
+
+struct NotCBOOifiedException <: Exception
+    type
+end
+
+function Base.showerror(io::IO, e::NotCBOOifiedException)
+    print(io, "Type $(e.type) is not CBOOified.")
+end
+
+struct AlreadyCBOOifiedException <: Exception
+    type
+end
+
+function Base.showerror(io::IO, e::AlreadyCBOOifiedException)
+    print(io, "Type $(e.type) is already CBOOified. This can only be done once.")
+end
+
+# TODO: reorganize so we don't have to do this.
 function _unesc(expr::Expr)
     expr.head === :escape && length(expr.args) == 1 &&
         return only(expr.args)
     throw(ArgumentError("Non-user error: Expression is not escaped"))
-end
-
-function _unesc2(expr::Expr)
-    expr.head === :escape && length(expr.args) == 1 &&
-        return only(expr.args)
-    return expr
 end
 
 issym(ex) = isa(ex, Symbol)
@@ -20,8 +36,8 @@ isexpr(ex) = isa(ex, Expr)
 ishead(ex, _head) = (isexpr(ex) && ex.head === _head)
 isassign(ex) = ishead(ex, :(=))
 
-function _cboo_call(Struct; functup=:(()), callmethod=nothing, _getproperty=:getfield)
-    nStruct = esc(Struct)
+function _cboo_call(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproperty=:getfield)
+    nType_to_cbooify = esc(Type_to_cbooify)
     named_tup_pairs = []
     _unesc_named_tup_pairs = []
     for ex in functup.args
@@ -48,7 +64,7 @@ function _cboo_call(Struct; functup=:(()), callmethod=nothing, _getproperty=:get
     # Create a single function to call rather than generating one after a symbol matches.
     # The compiler can elide the latter only sometimes
     if callmethod === nothing
-        callcode = :(callmethod(q::$nStruct, meth::Function, args...) = meth(q, args...);)
+        callcode = :(callmethod(q::$nType_to_cbooify, meth::Function, args...) = meth(q, args...);)
         _callmethod = :callmethod
     else # The user can also supply a function external to the macro to call instead.
         _callmethod = esc(callmethod) # use the user-supplied method
@@ -61,30 +77,30 @@ function _cboo_call(Struct; functup=:(()), callmethod=nothing, _getproperty=:get
             const private_properties = (__cboo_list__ = FuncMap, __cboo_list__expr = $(QuoteNode(unesc_named_tup_pairs)),
                                 __cboo_callmethod__ = $(QuoteNode(callmethod)), __cboo_getproperty__ = $(QuoteNode(_getproperty)),
                                 __module__ = @__MODULE__);
-            function Base.getproperty(a::$nStruct, f::Symbol)
+            function Base.getproperty(a::$nType_to_cbooify, f::Symbol)
                 addfunc(func::Function) = (args...) -> ($_callmethod)(a, func, args...);
                 addfunc(notfunc) = notfunc;
                 f in keys(private_properties) && return getfield(private_properties, f)
                 f in keys(FuncMap) && return addfunc(getproperty(FuncMap, f))
                 $(esc(_getproperty))(a, f) # call getfield, or a  user-supplied function
             end;
-            function Base.getproperty(t::Type{$nStruct}, f::Symbol)
+            function Base.getproperty(t::Type{$nType_to_cbooify}, f::Symbol)
                 f in keys(private_properties) && return getfield(private_properties, f)
                 return getfield(t, f)
             end;
-            function Base.propertynames(a::$nStruct, private::Bool=false)
-                pnames = (fieldnames($nStruct)..., keys(FuncMap)...)
+            function Base.propertynames(a::$nType_to_cbooify, private::Bool=false)
+                pnames = (fieldnames($nType_to_cbooify)..., keys(FuncMap)...)
                 if private
                     return pnames # Should be the same?
                 else
                     return pnames
                 end
             end;
-            function Base.propertynames(::Type{$nStruct}, private::Bool=false)
+            function Base.propertynames(::Type{$nType_to_cbooify}, private::Bool=false)
                 if private
-                    return (fieldnames(typeof($nStruct))..., keys(private_properties)...)
+                    return (fieldnames(typeof($nType_to_cbooify))..., keys(private_properties)...)
                 else
-                    return fieldnames(typeof($nStruct))
+                    return fieldnames(typeof($nType_to_cbooify))
                 end
             end;
         )
@@ -93,9 +109,9 @@ function _cboo_call(Struct; functup=:(()), callmethod=nothing, _getproperty=:get
 end
 
 """
-    @cboo_call(Struct, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
+    @cboo_call(Type_to_cbooify, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
 
-Allow functions of the form `f1(s::Struct, args...)` to also be called with `s.f1(args...)` with no performance penalty.
+Allow functions of the form `f1(s::Type_to_cbooify, args...)` to also be called with `s.f1(args...)` with no performance penalty.
 
 `callmethod` and `getproperty` are keyword arguments.
 
@@ -110,7 +126,7 @@ If `getproperty` is supplied then it is called, rather than `getfield`, when loo
 property that is not on the list of functions. This can be useful if you want further
 specialzed behavior of `getproperty`.
 
-`@cboo_call` must by called after the definition of `Struct`, but may
+`@cboo_call` must by called after the definition of `Type_to_cbooify`, but may
 be called before the functions are defined.
 
 If an entry is not function, then it is returned, rather than called.  For example
@@ -155,28 +171,34 @@ julia> a.__cboo_list__
 * The following two calls have the same effect.
 
 ```julia
-@cboo_call(Struct, (f1, f2, ...))
+@cboo_call(Type_to_cbooify, (f1, f2, ...))
 
-@cboo_call(Struct, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
+@cboo_call(Type_to_cbooify, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
 ```
 """
-macro cboo_call(Struct, args...)
-    _Struct = Core.eval(__module__, Struct)
-    is_cbooified(_Struct) && error("Type $_Struct has already been CBOO-ified. This can only be done once. " *
-        "Try `add_cboo_calls`.")
-    code = _prep_cboo_call(Struct, args...)
+macro cboo_call(Type_to_cbooify, args...)
+    _Type_to_cbooify = Core.eval(__module__, Type_to_cbooify)
+    is_cbooified(_Type_to_cbooify) && throw(AlreadyCBOOifiedException(_Type_to_cbooify))
+    # error("Type $_Type_to_cbooify has already been CBOO-ified. This can only be done once. " *
+    #     "Try `add_cboo_calls`.")
+    code = _prep_cboo_call(Type_to_cbooify, args...)
     return code
 end
 
+"""
+    is_cbooified(::Type{T})
+
+Return `true` if the `@cboo_call` macro has been called on `T`.
+"""
 is_cbooified(::Type{T}) where T = :__cboo_list__ in propertynames(T, true)
 
-macro _add_cboo_calls(Struct, args...)
-    _Struct = Core.eval(__module__, Struct)
-    code = _prep_cboo_call(Struct, args...)
+macro _add_cboo_calls(Type_to_cbooify, args...)
+    _Type_to_cbooify = Core.eval(__module__, Type_to_cbooify)
+    code = _prep_cboo_call(Type_to_cbooify, args...)
     return code
 end
 
-function _prep_cboo_call(Struct, args...)
+function _prep_cboo_call(Type_to_cbooify, args...)
     argd = Dict{Symbol,Any}()
     argd[:functup] = :(())
     argd[:callmethod] = nothing
@@ -195,33 +217,77 @@ function _prep_cboo_call(Struct, args...)
             error("@cboo_call: Invalid argument $arg")
         end
     end
-    return _cboo_call(Struct; functup=argd[:functup], callmethod=argd[:callmethod], _getproperty=argd[:getproperty])
+    return _cboo_call(Type_to_cbooify; functup=argd[:functup], callmethod=argd[:callmethod], _getproperty=argd[:getproperty])
 end
 
 
 """
-    add_cboo_calls(::Type{T}, functup)
+    add_cboo_calls(::Type{CBOOedT}, cboolist)
 
-Add the functions specified to the list of functions that can be cboo-called for
-a type `T` that has already been cboo-ified. Return a `Tuple` of the functions
-that were added, that is, not already on the list.
+Add the properties in `cboolist` to the list of properties that can be cboo-called for
+a type `CBOOedT` that has already been cboo-ified.
+
+Only properties that are not already CBOO-ified for `CBooedT` are added. Previous
+added properties will not be updated.
+
+Since `add_cboo_calls` is a function, in contrast to `@cboo_call`,
+`cboolist` can be a literal container
+(for example `Tuple` or `Vector`) or a variable name bound to a container.
+
+Returns a `Vector` of two-tuples (`Tuple`) of the properties that were added,
+that is, not already on the list.
+
+# Examples
+```julia-repl
+julia> cbooified_properties(MyA)
+(sx = MyAs.sx, x = MyAs.x, sin = sin, y = 3, mycos = MyAs.var"#1#3"())
+
+julia> add_cboo_calls(MyA, (:x, :sx, :cf))
+1-element Vector{Tuple{Symbol, Symbol}}:
+ (:cf, :cf)
+
+julia> add_cboo_calls(MyA, (:x, :sx, :cf))
+()
+```
 """
-function add_cboo_calls(::Type{T}, functup) where T
-    is_cbooified(T) || throw(ArgumentError("`@cboo_call` has not been invoked for type $T"))
-    toadd = filter(x -> !in(first(x), keys(T.__cboo_list__)),
-                   ((isa(y, Symbol) ? (y, y) : (y.args...,) for y in functup.args)...,))
+function add_cboo_calls(::Type{CBOOedT}, cboolist) where CBOOedT
+    is_cbooified(CBOOedT) || throw(NotCBOOifiedException(CBOOedT))
+    toadd = filter(x -> !in(first(x), keys(CBOOedT.__cboo_list__)),
+                   [isa(y, Symbol) ? (y, y) : (y.args...,) for y in cboolist])
     isempty(toadd) && return ()
-    expr = (T.__cboo_list__expr..., toadd...)
+    expr = (CBOOedT.__cboo_list__expr..., toadd...)
     expreq = ((:($(x[1])=$(x[2])) for x in expr)...,)
-    callmethod = T.__cboo_callmethod__
-    _getproperty = T.__cboo_getproperty__
-    _functup = Expr(:tuple, expreq...)
+    callmethod = CBOOedT.__cboo_callmethod__
+    _getproperty = CBOOedT.__cboo_getproperty__
+    _cboolist = Expr(:tuple, expreq...)
 
-    Core.eval(T.__module__, :(using CBOO: @_add_cboo_calls))
-    Core.eval(T.__module__, :(@_add_cboo_calls $T callmethod=$callmethod getproperty=$_getproperty ($(expreq...),)))
+    Core.eval(CBOOedT.__module__, :(using CBOO: @_add_cboo_calls))
+    Core.eval(CBOOedT.__module__,
+              :(@_add_cboo_calls $CBOOedT callmethod=$callmethod getproperty=$_getproperty ($(expreq...),)))
     return toadd
 end
 
+"""
+    cbooified_properties(::Type{T}) where T
+
+Return a `NamedTuple` of CBOO-ified properties for type `T`.
+The keys are properties, and the values are the functions or data
+associated with the properties.
+"""
+function cbooified_properties(::Type{T}) where T
+    is_cbooified(T) || throw(NotCBOOifiedException(T))
+    return T.__cboo_list__
+end
+
+"""
+    whichmodule(::Type{T}) where T
+
+Return the module in which `T` was CBOO-ified.
+"""
+function whichmodule(::Type{T}) where T
+    is_cbooified(T) || throw(NotCBOOifiedException(T))
+    return T.__module__
+end
 
 
 end # module CBOO
