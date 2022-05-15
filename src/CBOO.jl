@@ -122,7 +122,10 @@ required to be a symbol. For example `myf = Base._unexportedf`.
 If `callmethod` is supplied, then `s.f1(args...)` is translated to `callmethod(s, f1,
 args...)` instead of `f1(s, args...)`.
 
-If `getproperty` is supplied then it is called, rather than `getfield`, when looking up a
+`@cboo_call` works by writing methods (or clobbering methods) for the functions
+`Base.getproperty` and `Base.propertnames`.
+
+`getproperty` must be a function. If supplied, then it is called, rather than `getfield`, when looking up a
 property that is not on the list of functions. This can be useful if you want further
 specialzed behavior of `getproperty`.
 
