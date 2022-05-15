@@ -91,7 +91,7 @@ function _cbooify(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproper
             function Base.propertynames(a::$nType_to_cbooify, private::Bool=false)
                 pnames = (fieldnames($nType_to_cbooify)..., keys(FuncMap)...)
                 if private
-                    return pnames # Should be the same?
+                    return (pnames..., keys(private_properties)...) # we need this for is_cbooified, etc.
                 else
                     return pnames
                 end
@@ -136,10 +136,6 @@ If an entry is not function, then it is returned, rather than called.  For examp
 `@cbooify MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
 function.
 
-For `a::A`, two additional properties are defined for both `a` and `A`: `__module__` which
-returns the module in which `@cbooify` was invoked, and `__cboo_list__` which returns
-the list of properties and functions that were passed in the invocation of `@cbooify`.
-
 # Examples:
 
 * Use within a module
@@ -164,10 +160,10 @@ julia> a = Amod.A(3);
 julia> Amod.w(a, 4) == a.w(4) == 7
 true
 
-julia> a.__module__
+julia> CBOO.whichmodule(a)
 Main.Amod
 
-julia> a.__cboo_list__
+julia> CBOO.cboofied_properties(a)
 (w = Main.Amod.w, z = Main.Amod.z)
 ```
 
@@ -194,6 +190,9 @@ end
 Return `true` if the `@cbooify` macro has been called on `T`.
 """
 is_cbooified(::Type{T}) where T = :__cboo_list__ in propertynames(T, true)
+
+# TODO: The same as above, really. Reorganize this
+is_cbooified(a) = :__cboo_list__ in propertynames(a, true)
 
 macro _add_cboo_calls(Type_to_cbooify, args...)
     _Type_to_cbooify = Core.eval(__module__, Type_to_cbooify)
@@ -282,14 +281,29 @@ function cbooified_properties(::Type{T}) where T
     return T.__cboo_list__
 end
 
+# TODO: Note, this error message may be wrong. MyA and MyA{Int} are different
+function cbooified_properties(a)
+    is_cbooified(a) || throw(NotCBOOifiedException(typeof(a)))
+    return a.__cboo_list__
+end
+
 """
     whichmodule(::Type{T}) where T
 
 Return the module in which `T` was CBOO-ified.
+
+NOTE: this uses information stored by CBOO. Might be the same as
+info retrievable through Julia.
 """
 function whichmodule(::Type{T}) where T
     is_cbooified(T) || throw(NotCBOOifiedException(T))
     return T.__module__
+end
+
+# Note, this error message may be wrong. MyA and MyA{Int} are different
+function whichmodule(a)
+    is_cbooified(a) || throw(NotCBOOifiedException(typeof(a)))
+    return a.__module__
 end
 
 end # module CBOO

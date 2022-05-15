@@ -57,9 +57,9 @@ For more features and details, see the docstring.
 
 #### Docstring
 
-    @cbooify(Type_to_cbooifiy, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
+    @cbooify(Type_to_cbooify, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
 
-Allow functions of the form `f1(s::Type_to_cbooifiy, args...)` to also be called with `s.f1(args...)` with no performance penalty.
+Allow functions of the form `f1(s::Type_to_cbooify, args...)` to also be called with `s.f1(args...)` with no performance penalty.
 
 `callmethod` and `getproperty` are keyword arguments.
 
@@ -70,21 +70,19 @@ required to be a symbol. For example `myf = Base._unexportedf`.
 If `callmethod` is supplied, then `s.f1(args...)` is translated to `callmethod(s, f1,
 args...)` instead of `f1(s, args...)`.
 
+`@cbooify` works by writing methods (or clobbering methods) for the functions
+`Base.getproperty` and `Base.propertnames`.
 
-If `getproperty` is supplied then it is called, rather than `getfield`, when looking up a
+`getproperty` must be a function. If supplied, then it is called, rather than `getfield`, when looking up a
 property that is not on the list of functions. This can be useful if you want further
 specialzed behavior of `getproperty`.
 
-`@cbooify` must by called after the definition of `Type_to_cbooifiy`, but may
+`@cbooify` must by called after the definition of `Type_to_cbooify`, but may
 be called before the functions are defined.
 
 If an entry is not function, then it is returned, rather than called.  For example
 `@cbooify MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
 function.
-
-For `a::A`, two additional properties are defined for both `a` and `A`: `__module__` which
-returns the module in which `@cbooify` was invoked, and `__cboo_list__` which returns
-the list of properties and functions that were passed in the invocation of `@cbooify`.
 
 #### Examples:
 
@@ -110,21 +108,20 @@ julia> a = Amod.A(3);
 julia> Amod.w(a, 4) == a.w(4) == 7
 true
 
-julia> a.__module__
+julia> CBOO.whichmodule(a)
 Main.Amod
 
-julia> a.__cboo_list__
+julia> CBOO.cboofied_properties(a)
 (w = Main.Amod.w, z = Main.Amod.z)
 ```
 
 * The following two calls have the same effect.
 
 ```julia
-@cbooify(T, (f1, f2, ...))
+@cbooify(Type_to_cbooify, (f1, f2, ...))
 
-@cbooify(T, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
+@cbooify(Type_to_cbooify, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
 ```
-
 
 <!--  LocalWords:  CBOO args Benchmarking smalltest jl julia MyAs const MyA sx
  -->
