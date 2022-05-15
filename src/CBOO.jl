@@ -292,5 +292,4 @@ function whichmodule(::Type{T}) where T
     return T.__module__
 end
 
-
 end # module CBOO
