@@ -52,11 +52,14 @@ Then you can write either `Amod.f(a, 1, 2)` or `a.f(1, 2)`.
 
 For more features and details, see the docstring.
 
+#### Functions and macros
+`@cboo_call`, `add_cboo_calls`, `is_cbooified`, `whichmodule`, `cbooified_properties`.
+
 #### Docstring
 
-    @cboo_call(Struct, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
+    @cboo_call(Type_to_cbooifiy, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
 
-Allow functions of the form `f1(s::Struct, args...)` to also be called with `s.f1(args...)` with no performance penalty.
+Allow functions of the form `f1(s::Type_to_cbooifiy, args...)` to also be called with `s.f1(args...)` with no performance penalty.
 
 `callmethod` and `getproperty` are keyword arguments.
 
@@ -67,11 +70,12 @@ required to be a symbol. For example `myf = Base._unexportedf`.
 If `callmethod` is supplied, then `s.f1(args...)` is translated to `callmethod(s, f1,
 args...)` instead of `f1(s, args...)`.
 
+
 If `getproperty` is supplied then it is called, rather than `getfield`, when looking up a
 property that is not on the list of functions. This can be useful if you want further
 specialzed behavior of `getproperty`.
 
-`@cboo_call` must by called after the definition of `Struct`, but may
+`@cboo_call` must by called after the definition of `Type_to_cbooifiy`, but may
 be called before the functions are defined.
 
 If an entry is not function, then it is returned, rather than called.  For example
@@ -116,9 +120,9 @@ julia> a.__cboo_list__
 * The following two calls have the same effect.
 
 ```julia
-@cboo_call(Struct, (f1, f2, ...))
+@cboo_call(T, (f1, f2, ...))
 
-@cboo_call(Struct, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
+@cboo_call(T, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
 ```
 
 
