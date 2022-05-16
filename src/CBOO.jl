@@ -1,5 +1,7 @@
 module CBOO
 
+function __add_dynamic end
+
 export @cbooify, add_cboo_calls, is_cbooified,
     cbooified_properties, whichmodule
 
@@ -70,10 +72,25 @@ function _cbooify(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproper
         _callmethod = esc(callmethod) # use the user-supplied method
         callcode = :(nothing)
     end
+    # The last thing to try before throwing an error is a slow looking in a Dict. This
+    # does not slow any of the earlier lookups. Probably worse is the compiler can do
+    # less optimization since the required function is not known at compile time.
+    if _getproperty === :getfield
+        # getfieldcode = :($(esc(_getproperty))(a, f)) # call getfield, or a  user-supplied function
+        getfieldcode = :(begin
+                              if hasfield($nType_to_cbooify, f)
+                                  return getfield(a, f)
+                              else
+                                  return addfunc(DYNAMIC_PROPERTIES[f])
+                              end
+                          end)
+    else
+        getfieldcode = :($(esc(_getproperty))(a, f)) # call getfield, or a  user-supplied function
+    end
     _getprop =
-        :(
+        quote
             $callcode;
-
+            const DYNAMIC_PROPERTIES = Dict{Symbol,Any}();
             const private_properties = (__cboo_list__ = FuncMap, __cboo_list__expr = $(QuoteNode(unesc_named_tup_pairs)),
                                 __cboo_callmethod__ = $(QuoteNode(callmethod)), __cboo_getproperty__ = $(QuoteNode(_getproperty)),
                                 __module__ = @__MODULE__);
@@ -82,6 +99,7 @@ function _cbooify(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproper
                 addfunc(notfunc) = notfunc;
                 f in keys(private_properties) && return getfield(private_properties, f)
                 f in keys(FuncMap) && return addfunc(getproperty(FuncMap, f))
+                $getfieldcode;
                 $(esc(_getproperty))(a, f) # call getfield, or a  user-supplied function
             end;
             function Base.getproperty(t::Type{$nType_to_cbooify}, f::Symbol)
@@ -103,7 +121,13 @@ function _cbooify(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproper
                     return fieldnames(typeof($nType_to_cbooify))
                 end
             end;
-        )
+            #            function (@__MODULE__).__add_dynamic(::Type{$nType_to_cbooify}, f::Symbol, val)
+            import CBOO: __add_dynamic
+            function CBOO.__add_dynamic(::Type{$nType_to_cbooify}, f::Symbol, val)
+                # TODO: probably want to prohibit clobbering
+                DYNAMIC_PROPERTIES[f] = val
+            end;
+        end
     push!(func_decl.args, _getprop)
     return func_decl
 end
