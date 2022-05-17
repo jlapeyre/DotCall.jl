@@ -11,7 +11,7 @@ try
 
     using MyAs: MyA, MyAs
     include("basic_tests.jl")
-    include("bench_tests.jl")
+    # include("bench_tests.jl")
 
 finally
     empty!(LOAD_PATH)
