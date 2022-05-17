@@ -9,7 +9,9 @@ penalty.
 
 The main motivation is make is easy to call many functions with short names without bringing
 them into scope. For example `s.x(1)`, `s.y(3)`,  `s.z(3)`, etc. We want to do this without
-claiming `x`, `y`, `z`, and many others.
+claiming `x`, `y`, `z`, and many others. This is all the package does despite being called
+CBOO.jl. It doesn't offer other features of typical OO systems. This package writes a `getproperty`
+method. So any other OO features that need to be in `getproperty` might go in CBOO.jl
 
 A requirement is no performance penalty. Benchmarking the code in the test suite shows
 no performance penalty. But, there may be some lurking.

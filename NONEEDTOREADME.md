@@ -89,6 +89,3 @@ julia> @btime in(:a, (:b, :c, :a))
   0.020 ns (0 allocations: 0 bytes)
 true
 ```
-
-Add a barrier function in the right place, and you can get the compiler to rewrite the CBOO
-syntax for you.
