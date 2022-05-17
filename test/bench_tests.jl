@@ -17,43 +17,51 @@ using BenchmarkTools
     f_usual = (_=nothing) -> [MyAs.sx(y2, i) for i in 1:100];
     _pr(t) = @sprintf("%.3g", t)
 
-    t_cboo = @belapsed $f_cboo() # foreach(f_cboo, 1:n)
-    t_usual = @belapsed $f_usual() #foreach(f_usual, 1:n)
+    local t_cboo
+    local t_usual
+
+    f_cboo()
+    f_usual()
+    _ = @elapsed foreach(f_cboo, 1:10)
+    _ = @elapsed foreach(f_usual, 1:10)
+
+    n = 10^6
+    try
+        GC.enable(false)
+        GC.gc()
+        t_usual = @elapsed foreach(f_usual, 1:n)
+        GC.gc()
+        t_cboo = @elapsed foreach(f_cboo, 1:n)
+    finally
+        GC.enable(true)
+    end
+
+    err = (t_cboo - t_usual) / t_cboo
+    println("Roll your own")
+    println("bench: t_cboo = $(_pr(t_cboo)), t_usual = $(_pr(t_usual))")
+    println("bench: (t_cboo - t_usual) / t_cboo = $(_pr(err))")
+    @test abs(err) < 0.2
+
+    try # reverse order
+        GC.enable(false)
+        GC.gc()
+        t_cboo = @elapsed foreach(f_cboo, 1:n)
+        GC.gc()
+        t_usual = @elapsed foreach(f_usual, 1:n)
+    finally
+        GC.enable(true)
+    end
+
     err = (t_cboo - t_usual) / t_cboo
     println("bench: t_cboo = $(_pr(t_cboo)), t_usual = $(_pr(t_usual))")
     println("bench: (t_cboo - t_usual) / t_cboo = $(_pr(err))")
     @test abs(err) < 0.2
 
-    # f_cboo()
-    # f_usual()
-    # _ = @elapsed foreach(f_cboo, 1:10)
-    # _ = @elapsed foreach(f_usual, 1:10)
-
-    # n = 10^6
-    # local t_cboo
-    # local t_usual
-    # try
-    #     GC.enable(false)
-    #     GC.gc()
-    #     t_usual = @elapsed
-    #     GC.gc()
-    #     t_cboo = @elapsed
-    # finally
-    #     GC.enable(true)
-    # end
-
-    # try # reverse order
-    #     GC.enable(false)
-    #     GC.gc()
-    #     t_cboo = @elapsed foreach(f_cboo, 1:n)
-    #     GC.gc()
-    #     t_usual = @elapsed foreach(f_usual, 1:n)
-    # finally
-    #     GC.enable(true)
-    # end
-
-    # err = (t_cboo - t_usual) / t_cboo
-    # println("bench: t_cboo = $(_pr(t_cboo)), t_usual = $(_pr(t_usual))")
-    # println("bench: (t_cboo - t_usual) / t_cboo = $(_pr(err))")
-    # @test abs(err) < 0.2
+    t_cboo = @belapsed $f_cboo() # foreach(f_cboo, 1:n)
+    t_usual = @belapsed $f_usual() #foreach(f_usual, 1:n)
+    err = (t_cboo - t_usual) / t_cboo
+    println("@belapsed")
+    println("bench: t_cboo = $(_pr(t_cboo)), t_usual = $(_pr(t_usual))")
+    println("bench: (t_cboo - t_usual) / t_cboo = $(_pr(err))")
+    @test abs(err) < 0.2
 end
