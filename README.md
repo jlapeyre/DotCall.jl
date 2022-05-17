@@ -7,7 +7,7 @@ This package provides `@cbooify` which allows you to write the function call `f(
 You can use it by adding a single line to your module. Using the alternative call syntax incurs no performance
 penalty.
 
-The main motivation is make is easy to call many functions with short names without bringing
+The main motivation is to make it easy to call many functions with short names without bringing
 them into scope. For example `s.x(1)`, `s.y(3)`,  `s.z(3)`, etc. We want to do this without
 claiming `x`, `y`, `z`, and many others. This is all the package does despite being called
 CBOO.jl. It doesn't offer other features of typical OO systems. This package writes a `getproperty`
