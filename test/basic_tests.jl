@@ -1,4 +1,4 @@
-@testset "CBOO.jl" begin
+@testset "CBOOCall.jl" begin
     y = MyA(3)
     @test y.sx(4) == 7
     @test MyAs.sx(y, 4) == 7

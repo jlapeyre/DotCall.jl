@@ -1,6 +1,6 @@
 module MyBs
 
-using CBOO: @cbooify
+using CBOOCall: @cbooify
 
 export MyB, x, sx, addto!
 

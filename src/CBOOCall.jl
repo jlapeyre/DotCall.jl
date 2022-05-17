@@ -1,11 +1,11 @@
-module CBOO
+module CBOOCall
 
 function __add_dynamic end
 
 export @cbooify, add_cboo_calls, is_cbooified,
     cbooified_properties, whichmodule
 
-struct CBOOSyntaxException <: Exception
+struct CBOOCallSyntaxException <: Exception
     msg::String
 end
 
@@ -122,8 +122,8 @@ function _cbooify(Type_to_cbooify; functup=:(()), callmethod=nothing, _getproper
                 end
             end;
             #            function (@__MODULE__).__add_dynamic(::Type{$nType_to_cbooify}, f::Symbol, val)
-            import CBOO: __add_dynamic
-            function CBOO.__add_dynamic(::Type{$nType_to_cbooify}, f::Symbol, val)
+            import CBOOCall: __add_dynamic
+            function CBOOCall.__add_dynamic(::Type{$nType_to_cbooify}, f::Symbol, val)
                 # TODO: probably want to prohibit clobbering
                 DYNAMIC_PROPERTIES[f] = val
             end;
@@ -166,13 +166,13 @@ function.
 
 ```julia
 module Amod
-import CBOO
+import CBOOCall
 
 struct A
     x::Int
 end
 
-CBOO.@cbooify A (w, z)
+CBOOCall.@cbooify A (w, z)
 
 w(a::A, y) = a.x + y
 z(a::A, x, y) = a.x + y + x
@@ -184,10 +184,10 @@ julia> a = Amod.A(3);
 julia> Amod.w(a, 4) == a.w(4) == 7
 true
 
-julia> CBOO.whichmodule(a)
+julia> CBOOCall.whichmodule(a)
 Main.Amod
 
-julia> CBOO.cboofied_properties(a)
+julia> CBOOCall.cboofied_properties(a)
 (w = Main.Amod.w, z = Main.Amod.z)
 ```
 
@@ -287,7 +287,7 @@ function add_cboo_calls(::Type{CBOOedT}, cboolist) where CBOOedT
     _getproperty = CBOOedT.__cboo_getproperty__
     _cboolist = Expr(:tuple, expreq...)
 
-    Core.eval(CBOOedT.__module__, :(using CBOO: @_add_cboo_calls))
+    Core.eval(CBOOedT.__module__, :(using CBOOCall: @_add_cboo_calls))
     Core.eval(CBOOedT.__module__,
               :(@_add_cboo_calls $CBOOedT callmethod=$callmethod getproperty=$_getproperty ($(expreq...),)))
     return toadd
@@ -316,7 +316,7 @@ end
 
 Return the module in which `T` was CBOO-ified.
 
-NOTE: this uses information stored by CBOO. Might be the same as
+NOTE: this uses information stored by CBOOCall. Might be the same as
 info retrievable through Julia.
 """
 function whichmodule(::Type{T}) where T
@@ -330,4 +330,4 @@ function whichmodule(a)
     return a.__module__
 end
 
-end # module CBOO
+end # module CBOOCall

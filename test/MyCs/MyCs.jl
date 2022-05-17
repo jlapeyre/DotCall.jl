@@ -1,6 +1,6 @@
 module MyCs
 
-using CBOO: @cbooify
+using CBOOCall: @cbooify
 
 export MyC, x, s
 

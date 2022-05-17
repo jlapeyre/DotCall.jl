@@ -1,7 +1,7 @@
-# CBOO
+# CBOOCall
 
-[![Build Status](https://github.com/jlapeyre/CBOO.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jlapeyre/CBOO.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/jlapeyre/CBOO.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/jlapeyre/CBOO.jl)
+[![Build Status](https://github.com/jlapeyre/CBOOCall.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jlapeyre/CBOOCall.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/jlapeyre/CBOOCall.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/jlapeyre/CBOOCall.jl)
 
 This package provides `@cbooify` which allows you to write the function call `f(a::A, args...)` as `a.f(args...)` as well.
 You can use it by adding a single line to your module. Using the alternative call syntax incurs no performance
@@ -10,8 +10,8 @@ penalty.
 The main motivation is to make it easy to call many functions with short names without bringing
 them into scope. For example `s.x(1)`, `s.y(3)`,  `s.z(3)`, etc. We want to do this without
 claiming `x`, `y`, `z`, and many others. This is all the package does despite being called
-CBOO.jl. It doesn't offer other features of typical OO systems. This package writes a `getproperty`
-method. So any other OO features that need to be in `getproperty` might go in CBOO.jl
+CBOOCall.jl. It doesn't offer other features of typical OO systems. This package writes a `getproperty`
+method. So any other OO features that need to be in `getproperty` might go in CBOOCall.jl
 
 A requirement is no performance penalty. Benchmarking the code in the test suite shows
 no performance penalty. But, there may be some lurking.
@@ -36,7 +36,7 @@ Prints:
 ```julia
 module Amod
 
-using CBOO: @cbooify
+using CBOOCall: @cbooify
 
 struct A
   x::Int
@@ -92,13 +92,13 @@ function.
 
 ```julia
 module Amod
-import CBOO
+import CBOOCall
 
 struct A
     x::Int
 end
 
-CBOO.@cbooify A (w, z)
+CBOOCall.@cbooify A (w, z)
 
 w(a::A, y) = a.x + y
 z(a::A, x, y) = a.x + y + x
@@ -110,10 +110,10 @@ julia> a = Amod.A(3);
 julia> Amod.w(a, 4) == a.w(4) == 7
 true
 
-julia> CBOO.whichmodule(a)
+julia> CBOOCall.whichmodule(a)
 Main.Amod
 
-julia> CBOO.cboofied_properties(a)
+julia> CBOOCall.cboofied_properties(a)
 (w = Main.Amod.w, z = Main.Amod.z)
 ```
 
@@ -125,7 +125,7 @@ julia> CBOO.cboofied_properties(a)
 @cbooify(Type_to_cbooify, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
 ```
 
-<!--  LocalWords:  CBOO args Benchmarking smalltest jl julia MyAs const MyA sx
+<!--  LocalWords:  CBOOCall args Benchmarking smalltest jl julia MyAs const MyA sx
  -->
 <!--  LocalWords:  BenchmarkTools btime ns Amod cboo struct docstring
  -->

@@ -1,6 +1,6 @@
 module MyAs
 
-using CBOO: @cbooify
+using CBOOCall: @cbooify
 
 export MyA, x, sx
 

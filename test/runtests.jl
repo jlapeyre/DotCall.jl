@@ -1,4 +1,4 @@
-using CBOO
+using CBOOCall
 using Test
 
 oldLOAD_PATH = copy(LOAD_PATH)
