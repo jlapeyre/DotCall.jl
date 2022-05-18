@@ -37,7 +37,7 @@ I mean `split(",", "a,b,c")`.
 
 ```python
 >>> spl[TAB, TAB] # Bonk! Bonk! It's not there.
->>> from string import spl[TAB, TAB] # Bonk! Bonk ! Not there either. Good.
+>>> from string import spl[TAB, TAB] # Bonk! Bonk! Not there either. Good.
 >>> ','.split("a,b,c")
 [',']
 >>> "a,b,c".split(',')
