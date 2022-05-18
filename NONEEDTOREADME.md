@@ -44,10 +44,10 @@ I mean `split(",", "a,b,c")`.
 ['a', "b", 'c']
 ```
 
-So the first way was correct. In any case, this is clearly the superior syntax
+So the first way was correct. In any case, this is clearly the superior, intuitive, syntax
 for splitting strings.
 
-Of course, you have to pay for this intuitive syntax with a performance hit, right? How much is it?
+Of course, you have to pay for this with a performance hit, right? How much is it?
 
 Let's pick a fast operation, and put it in the middle of a list, and swap parameter order for no reason.
 
