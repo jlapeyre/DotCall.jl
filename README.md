@@ -9,12 +9,14 @@ penalty.
 
 The main motivation is to make it easy to call many functions with short names without bringing
 them into scope. For example `s.x(1)`, `s.y(3)`,  `s.z(3)`, etc. We want to do this without
-claiming `x`, `y`, `z`, and many others. This is all the package does despite being called
-CBOOCall.jl. It doesn't offer other features of typical OO systems. This package writes a `getproperty`
+claiming `x`, `y`, `z`, among others. This is all the package does.
+It doesn't offer other features of typical OO systems. This package writes a `getproperty`
 method. So any other OO features that need to be in `getproperty` might go in CBOOCall.jl
 
-A requirement is no performance penalty. Benchmarking the code in the test suite shows
-no performance penalty. But, there may be some lurking.
+A requirement of design is no performance penalty. I mean I would not have brought
+this to a package if there were a performance penalty.
+And benchmarking the code in the test suite shows there is none.
+But, there may be some lurking somewhere.
 
 For example the script [smalltest.jl](./smalltest.jl)
 ```julia
