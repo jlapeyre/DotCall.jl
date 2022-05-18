@@ -40,8 +40,8 @@ I mean `split(",", "a,b,c")`.
 >>> from string import spl[TAB, TAB] # Bonk! Bonk! Not there either. Good.
 >>> ','.split("a,b,c")
 [',']
->>> "a,b,c".split(',')
-['a', 'b', 'c']
+>>> 'a,b,c'.split(",")
+['a', "b", 'c']
 ```
 
 So the first way was correct. In any case, this is clearly the superior syntax
