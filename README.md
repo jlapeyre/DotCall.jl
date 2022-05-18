@@ -124,7 +124,7 @@ julia> CBOOCall.cboofied_properties(a)
 ```julia
 @cbooify(Type_to_cbooify, (f1, f2, ...))
 
-@cbooify(Type_to_cbooify, (f1, f2, ...) callmethod=nothing, getproperty=getfield)
+@cbooify(Type_to_cbooify, (f1, f2, ...), callmethod=nothing, getproperty=getfield)
 ```
 
 <!--  LocalWords:  CBOOCall args Benchmarking smalltest jl julia MyAs const MyA sx
