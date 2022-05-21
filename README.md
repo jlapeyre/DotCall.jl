@@ -10,7 +10,21 @@ penalty.
 The main motivation is to make it easy to call many functions with short names without bringing
 them into scope. For example `s.x(1)`, `s.y(3)`,  `s.z(3)`, etc. We want to do this without
 claiming `x`, `y`, `z`, among others. This is all the package does.
-It doesn't offer other features of typical OO systems. This package writes a `getproperty`
+
+For example, in building  quantum computing circuits programmatically, people really want
+to write `circ.x(1)` to add an `X` gate on wire `1`. You could do
+```julia
+using QCircuit: add!  # ok to import this probably
+
+add!(circ, QCircuit.x, 1) # But, I really don't want to import x, y, z, etc.
+```
+
+Here is [an example](https://github.com/rafal-pracht/QuantumCircuits.jl/blob/b1463aa6aac3c088c3ca14b90067a525788ddf8b/src/QCircuits/Circuit.jl#L93) from an application
+```julia
+@cbooify QCircuit (x, sx, y, z, h, cx, s, sdg, t, tdg, u, u3, rx, ry, rz, rzx, u4, barrier, measure)
+``
+
+This package doesn't offer other features of typical OO systems. This package writes a `getproperty`
 method. So any other OO features that need to be in `getproperty` might go in CBOOCall.jl
 
 A requirement of design is no performance penalty. I mean I would not have brought
