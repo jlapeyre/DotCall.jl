@@ -22,7 +22,7 @@ add!(circ, QCircuit.x, 1) # But, I really don't want to import x, y, z, etc.
 Here is [an example](https://github.com/rafal-pracht/QuantumCircuits.jl/blob/b1463aa6aac3c088c3ca14b90067a525788ddf8b/src/QCircuits/Circuit.jl#L93) from an application
 ```julia
 @cbooify QCircuit (x, sx, y, z, h, cx, s, sdg, t, tdg, u, u3, rx, ry, rz, rzx, u4, barrier, measure)
-``
+```
 
 This package doesn't offer other features of typical OO systems. This package writes a `getproperty`
 method. So any other OO features that need to be in `getproperty` might go in CBOOCall.jl
