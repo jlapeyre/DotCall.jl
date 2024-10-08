@@ -1,4 +1,4 @@
-@testset "CBOOCall.jl" begin
+@testset "DotCall.jl" begin
     y = MyA(3)
     @test y.sx(4) == 7
     @test MyAs.sx(y, 4) == 7
@@ -6,7 +6,7 @@
     @test y.y == 3
     #@test_throws ErrorException y.cf
     @test_throws KeyError y.cf  # if we look up in dynamic dict
-    result = add_cboo_calls(MyA, (:x, :sx, :cf))
+    result = add_dotcalls(MyA, (:x, :sx, :cf))
     @test result == [(:cf, :cf)]
     @test y.cf() == 1
 
@@ -25,8 +25,8 @@ end
 
 @testset "properties" begin
     @test propertynames(MyA) == (:var, :body)
-    @test propertynames(MyA, true) == (:var, :body, :__cboo_list__, :__cboo_list__expr,
-                                       :__cboo_callmethod__, :__cboo_getproperty__, :__module__)
+    @test propertynames(MyA, true) == (:var, :body, :__dotcall_list__, :__dotcall_list__expr,
+                                       :__dotcall_callmethod__, :__dotcall_getproperty__, :__module__)
     @test fieldnames(MyA) == (:data,)
     z = MyA(4.1)
     @test propertynames(z) == (:data, :sx, :x, :sin, :y, :mycos, :cf)

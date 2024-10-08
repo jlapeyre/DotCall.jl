@@ -1,6 +1,6 @@
 module MyBs
 
-using CBOOCall: @cbooify
+using DotCall: @dotcallify
 
 export MyB, x, sx, addto!
 
@@ -10,7 +10,7 @@ end
 
 import Base: sin
 
-@cbooify MyB callmethod=addto! (x, sx, sin)
+@dotcallify MyB callmethod=addto! (x, sx, sin)
 
 function addto!(a::MyB, gate, args...)
     (:addto!, gate(a, args...))

@@ -1,6 +1,6 @@
 module MyCs
 
-using CBOOCall: @cbooify
+using DotCall: @dotcallify
 
 export MyC, x, s
 
@@ -8,7 +8,7 @@ struct MyC{T}
     data::T
 end
 
-@cbooify MyC getproperty=mygetfield (f, g)
+@dotcallify MyC getproperty=mygetfield (f, g)
 
 mygetfield(c::MyC, sym::Symbol) = getfield(c, sym)
 

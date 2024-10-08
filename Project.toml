@@ -1,5 +1,5 @@
-name = "CBOOCall"
-uuid = "b012eb62-94f7-4100-b683-fca14a09dfae"
+name = "DotCall"
+uuid = "c8efb2cb-5e3b-4fe2-bcce-5cd9f862e77b"
 authors = ["John Lapeyre <jlapeyre@users.noreply.github.com> and contributors"]
 version = "0.1.0"
 

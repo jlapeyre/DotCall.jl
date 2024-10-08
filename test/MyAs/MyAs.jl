@@ -1,6 +1,6 @@
 module MyAs
 
-using CBOOCall: @cbooify
+using DotCall: @dotcallify
 
 export MyA, x, sx
 
@@ -10,8 +10,8 @@ end
 
 import Base: sin
 
-#@cbooify MyA nothing getfield (x, sx, sin)
-@cbooify MyA (sx, x, sin, y = 3, mycos = (a -> Base.cos(a.data)))
+#@dotcallify MyA nothing getfield (x, sx, sin)
+@dotcallify MyA (sx, x, sin, y = 3, mycos = (a -> Base.cos(a.data)))
 
 sx(a::MyA, x::Int) = a.data + x
 x(a::MyA) = (a.data)^2

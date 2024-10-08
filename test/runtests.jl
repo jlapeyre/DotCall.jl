@@ -1,4 +1,4 @@
-using CBOOCall
+using DotCall
 using Test
 
 oldLOAD_PATH = copy(LOAD_PATH)
