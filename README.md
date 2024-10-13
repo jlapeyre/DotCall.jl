@@ -3,51 +3,17 @@
 [![Build Status](https://github.com/jlapeyre/DotCall.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jlapeyre/DotCall.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/jlapeyre/DotCall.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/jlapeyre/DotCall.jl)
 
-This package provides `@dotcallify` which allows you to write the function call `f(a::A, args...)` as `a.f(args...)` as well.
-You can use it by adding a single line to your module. Using the alternative call syntax incurs no performance
-penalty.
-
-The main motivation is to make it easy to call many functions with short names without bringing
-them into scope. For example `s.x(1)`, `s.y(3)`,  `s.z(3)`, etc. We want to do this without
-claiming `x`, `y`, `z`, among others. This is all the package does.
-
-For example, in building  quantum computing circuits programmatically, people really want
-to write `circ.x(1)` to add an `X` gate on wire `1`. You could do
+This package facilitates using the "dot notation" for calling methods that is common in class-based object oriented langauges.
+It provides a macro `@dotcallify` which allows you to call an existing method.
 ```julia
-using QCircuit: add!  # ok to import this probably
-
-add!(circ, QCircuit.x, 1) # But, I really don't want to import x, y, z, etc.
+f(a::A, args...)
 ```
-
-Here is [an example](https://github.com/rafal-pracht/QuantumCircuits.jl/blob/b1463aa6aac3c088c3ca14b90067a525788ddf8b/src/QCircuits/Circuit.jl#L93) from an application
+like this
 ```julia
-@dotcallify QCircuit (x, sx, y, z, h, cx, s, sdg, t, tdg, u, u3, rx, ry, rz, rzx, u4, barrier, measure)
+a.f(args...)
 ```
 
-This package doesn't offer other features of typical OO systems. This package writes a `getproperty`
-method. So any other OO features that need to be in `getproperty` might go in DotCall.jl
-
-A requirement of design is no performance penalty. I mean I would not have brought
-this to a package if there were a performance penalty.
-And benchmarking the code in the test suite shows there is none.
-But, there may be some lurking somewhere.
-
-For example the script [smalltest.jl](./smalltest.jl)
-```julia
-push!(LOAD_PATH, "./test/MyAs/", "./test/MyBs/")
-using MyAs
-using BenchmarkTools
-const y2 = MyA(5)
-@btime [y2.sx(i) for i in 1:100];
-@btime [MyAs.sx(y2, i) for i in 1:100];
-```
-Prints:
-```
-  40.218 ns (1 allocation: 896 bytes)
-  40.025 ns (1 allocation: 896 bytes)
-```
-
-#### Usage
+### Example
 
 ```julia
 module Amod
@@ -68,12 +34,58 @@ end # module Amod
 
 Then you can write either `Amod.f(a, 1, 2)` or `a.f(1, 2)`.
 
-For more features and details, see the docstring.
+### Performance
+
+Benchmarking has not revealed any runtime performance penalty in calling a method using dot notation.
+
+For example the script [examples/smalltest.jl](./examples/smalltest.jl)
+```julia
+push!(LOAD_PATH, "./test/MyAs/", "./test/MyBs/")
+using MyAs
+using BenchmarkTools
+const y2 = MyA(5)
+@btime [y2.sx(i) for i in 1:100];
+@btime [MyAs.sx(y2, i) for i in 1:100];
+```
+Prints:
+```
+  40.218 ns (1 allocation: 896 bytes)
+  40.025 ns (1 allocation: 896 bytes)
+```
+
+### Package that uses DotCall
+
+`DotCall.jl` was previously named `CBOOCall.jl`. But only the name changed, not the API. (other than minor updates
+and fixes)
+
+The package [QuantumCircuits.jl](https://github.com/rafal-pracht/QuantumCircuits.jl) uses `CBOOCall.jl`.
+
+The main motivation is to make it easy to call many functions with short names without bringing
+them into scope. For example `s.x(1)`, `s.y(3)`,  `s.z(3)`, etc. We want to do this without
+claiming `x`, `y`, `z`, among others. This is all the package does.
+
+For example, in building  quantum computing circuits programmatically, people really want
+to write `circ.x(1)` to add an `X` gate on wire `1`. You could do
+```julia
+using QCircuit: add!  # ok to import this probably
+
+add!(circ, QCircuit.x, 1) # But, I really don't want to import x, y, z, etc.
+```
+
+Here is [an example](https://github.com/rafal-pracht/QuantumCircuits.jl/blob/b1463aa6aac3c088c3ca14b90067a525788ddf8b/src/QCircuits/Circuit.jl#L93) from an application
+```julia
+@dotcallify QCircuit (x, sx, y, z, h, cx, s, sdg, t, tdg, u, u3, rx, ry, rz, rzx, u4, barrier, measure)
+```
+
+### Usage
 
 #### Functions and macros
+
+See doc strings for the following macros and methods.
+
 `@dotcallify`, `add_dotcalls`, `is_dotcallified`, `whichmodule`, `dotcallified_properties`.
 
-#### Docstring
+#### `@dotcallify` doc string
 
     @dotcallify(Type_to_dotcallify, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
 
@@ -102,7 +114,7 @@ If an entry is not function, then it is returned, rather than called.  For examp
 `@dotcallify MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
 function.
 
-#### Examples:
+#### Examples
 
 * Use within a module
 
