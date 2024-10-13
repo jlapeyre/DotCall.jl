@@ -78,12 +78,15 @@ function _dotcallify(Type_to_dotcallify; functup=:(()), callmethod=nothing, _get
     if _getproperty === :getfield
         # getfieldcode = :($(esc(_getproperty))(a, f)) # call getfield, or a  user-supplied function
         getfieldcode = :(begin
-                              if hasfield($nType_to_dotcallify, f)
-                                  return getfield(a, f)
-                              else
-                                  return addfunc(DYNAMIC_PROPERTIES[f])
-                              end
-                          end)
+                             if hasfield($nType_to_dotcallify, f)
+                                 return getfield(a, f)
+                             elseif haskey(DYNAMIC_PROPERTIES, f)
+                                 return addfunc(DYNAMIC_PROPERTIES[f])
+                             else
+                                 ts = string($nType_to_dotcallify)
+                                 error("$ts has no property or key \"$f\"")
+                             end
+                         end)
     else
         getfieldcode = :($(esc(_getproperty))(a, f)) # call getfield, or a  user-supplied function
     end
@@ -100,7 +103,9 @@ function _dotcallify(Type_to_dotcallify; functup=:(()), callmethod=nothing, _get
                 f in keys(private_properties) && return getfield(private_properties, f)
                 f in keys(FuncMap) && return addfunc(getproperty(FuncMap, f))
                 $getfieldcode;
-                $(esc(_getproperty))(a, f) # call getfield, or a  user-supplied function
+                # I don't know why I disabled the following line. It was part of a commit
+                # with message "Stop mysterious bug in QuantumCircuits.jl"
+#                $(esc(_getproperty))(a, f) # call getfield, or a  user-supplied function
             end;
             function Base.getproperty(t::Type{$nType_to_dotcallify}, f::Symbol)
                 f in keys(private_properties) && return getfield(private_properties, f)
