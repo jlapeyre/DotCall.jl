@@ -38,7 +38,7 @@ Then you can write either `Amod.f(a, 1, 2)` or `a.f(1, 2)`.
 
 Benchmarking has not revealed any runtime performance penalty in calling a method using dot notation.
 
-For example the script [smalltest.jl](./smalltest.jl)
+For example the script [examples/smalltest.jl](./examples/smalltest.jl)
 ```julia
 push!(LOAD_PATH, "./test/MyAs/", "./test/MyBs/")
 using MyAs
