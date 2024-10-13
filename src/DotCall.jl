@@ -58,7 +58,7 @@ function _dotcallify(Type_to_dotcallify; functup=:(()), callmethod=nothing, _get
     # Declare functions in case no methods for them are yet defined
     func_decl = Expr(:block, (:(function $func end) for (sym, func) in named_tup_pairs if isa(_unesc(func), Symbol))...)
 
-    # Build a NameTuple like (f=f, g=g, ....)
+    # Build a NamedTuple like (f=f, g=g, ....)
     tuple_arg = ((:($sym = $func) for (sym, func) in named_tup_pairs)...,)
     named_tuple = Expr(:const, Expr(:(=), :FuncMap, Expr(:tuple, tuple_arg...)))
     push!(func_decl.args, named_tuple)
@@ -78,12 +78,15 @@ function _dotcallify(Type_to_dotcallify; functup=:(()), callmethod=nothing, _get
     if _getproperty === :getfield
         # getfieldcode = :($(esc(_getproperty))(a, f)) # call getfield, or a  user-supplied function
         getfieldcode = :(begin
-                              if hasfield($nType_to_dotcallify, f)
-                                  return getfield(a, f)
-                              else
-                                  return addfunc(DYNAMIC_PROPERTIES[f])
-                              end
-                          end)
+                             if hasfield($nType_to_dotcallify, f)
+                                 return getfield(a, f)
+                             elseif haskey(DYNAMIC_PROPERTIES, f)
+                                 return addfunc(DYNAMIC_PROPERTIES[f])
+                             else
+                                 ts = string($nType_to_dotcallify)
+                                 error("$ts has no property or key \"$f\"")
+                             end
+                         end)
     else
         getfieldcode = :($(esc(_getproperty))(a, f)) # call getfield, or a  user-supplied function
     end
@@ -100,7 +103,9 @@ function _dotcallify(Type_to_dotcallify; functup=:(()), callmethod=nothing, _get
                 f in keys(private_properties) && return getfield(private_properties, f)
                 f in keys(FuncMap) && return addfunc(getproperty(FuncMap, f))
                 $getfieldcode;
-                $(esc(_getproperty))(a, f) # call getfield, or a  user-supplied function
+                # I don't know why I disabled the following line. It was part of a commit
+                # with message "Stop mysterious bug in QuantumCircuits.jl"
+#                $(esc(_getproperty))(a, f) # call getfield, or a  user-supplied function
             end;
             function Base.getproperty(t::Type{$nType_to_dotcallify}, f::Symbol)
                 f in keys(private_properties) && return getfield(private_properties, f)
@@ -202,10 +207,8 @@ julia> DotCall.dotcallified_properties(a)
 macro dotcallify(Type_to_dotcallify, args...)
     _Type_to_dotcallify = Core.eval(__module__, Type_to_dotcallify)
     is_dotcallified(_Type_to_dotcallify) && throw(AlreadyDotCallifiedException(_Type_to_dotcallify))
-    # error("Type $_Type_to_dotcallify has already been DotCall-ified. This can only be done once. " *
-    #     "Try `add_dotcalls`.")
-    code = _prep_dotcallify(Type_to_dotcallify, args...)
-    return code
+    # Generate and return code
+    _prep_dotcallify(Type_to_dotcallify, args...)
 end
 
 """
@@ -215,8 +218,9 @@ Return `true` if the `@dotcallify` macro has been called on `T`.
 """
 is_dotcallified(::Type{T}) where T = :__dotcall_list__ in propertynames(T, true)
 
+# I don't think we want this method.
 # TODO: The same as above, really. Reorganize this
-is_dotcallified(a) = :__dotcall_list__ in propertynames(a, true)
+# is_dotcallified(a) = :__dotcall_list__ in propertynames(a, true)
 
 macro _add_dotcalls(Type_to_dotcallify, args...)
     _Type_to_dotcallify = Core.eval(__module__, Type_to_dotcallify)
@@ -234,13 +238,13 @@ function _prep_dotcallify(Type_to_dotcallify, args...)
         if istup(arg)
             argd[:functup] = arg
         elseif isassign(arg)
-            length(arg.args) == 2 || error("@dotcallify: Bad assignment")
+            length(arg.args) == 2 || throw(DotCallSyntaxException("@dotcallify: Bad assignment"))
             (sym, rhs) = (arg.args...,)
-            issym(sym) || error("@dotcallify: LHS is not a symbol")
-            haskey(argd, sym) || error("@dotcallify: Invalid keyword $sym")
+            issym(sym) || throw(DotCallSyntaxException("@dotcallify: LHS is not a symbol"))
+            haskey(argd, sym) || throw(DotCallSyntaxException("@dotcallify: Invalid keyword $sym"))
             argd[sym] = rhs
         else
-            error("@dotcallify: Invalid argument $arg")
+            throw(DotCallSyntaxException("@dotcallify: Invalid argument $arg"))
         end
     end
     return _dotcallify(Type_to_dotcallify; functup=argd[:functup], callmethod=argd[:callmethod], _getproperty=argd[:getproperty])
@@ -305,11 +309,12 @@ function dotcallified_properties(::Type{T}) where T
     return T.__dotcall_list__
 end
 
+# Make the user call on the type, not the instance.
 # TODO: Note, this error message may be wrong. MyA and MyA{Int} are different
-function dotcallified_properties(a)
-    is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
-    return a.__dotcall_list__
-end
+# function dotcallified_properties(a)
+#     is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
+#     return a.__dotcall_list__
+# end
 
 """
     whichmodule(::Type{T}) where T
@@ -325,9 +330,9 @@ function whichmodule(::Type{T}) where T
 end
 
 # Note, this error message may be wrong. MyA and MyA{Int} are different
-function whichmodule(a)
-    is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
-    return a.__module__
-end
+# function whichmodule(a)
+#     is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
+#     return a.__module__
+# end
 
 end # module DotCall

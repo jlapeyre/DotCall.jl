@@ -1,10 +1,11 @@
 name = "DotCall"
 uuid = "c8efb2cb-5e3b-4fe2-bcce-5cd9f862e77b"
 authors = ["John Lapeyre <jlapeyre@users.noreply.github.com> and contributors"]
-version = "0.1.0"
+version = "0.1.1"
 
 [compat]
-julia = "1.5"
+julia = "1.7"
+Test = ">= 0.0"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
