@@ -80,9 +80,12 @@ Here is [an example](https://github.com/rafal-pracht/QuantumCircuits.jl/blob/b14
 ### Usage
 
 #### Functions and macros
+
+See doc strings for the following macros and methods.
+
 `@dotcallify`, `add_dotcalls`, `is_dotcallified`, `whichmodule`, `dotcallified_properties`.
 
-#### `@dotcallify`
+#### `@dotcallify` doc string
 
     @dotcallify(Type_to_dotcallify, (f1, f2, fa = Mod.f2...), callmethod=nothing, getproperty=getfield)
 
@@ -111,7 +114,7 @@ If an entry is not function, then it is returned, rather than called.  For examp
 `@dotcallify MyStruct (y=3,)`. Callable objects meant to be called must be wrapped in a
 function.
 
-#### More Examples
+#### Examples
 
 * Use within a module
 
