@@ -330,9 +330,9 @@ function whichmodule(::Type{T}) where T
 end
 
 # Note, this error message may be wrong. MyA and MyA{Int} are different
-function whichmodule(a)
-    is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
-    return a.__module__
-end
+# function whichmodule(a)
+#     is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
+#     return a.__module__
+# end
 
 end # module DotCall
