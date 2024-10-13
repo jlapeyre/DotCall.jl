@@ -309,11 +309,12 @@ function dotcallified_properties(::Type{T}) where T
     return T.__dotcall_list__
 end
 
+# Make the user call on the type, not the instance.
 # TODO: Note, this error message may be wrong. MyA and MyA{Int} are different
-function dotcallified_properties(a)
-    is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
-    return a.__dotcall_list__
-end
+# function dotcallified_properties(a)
+#     is_dotcallified(a) || throw(NotDotCallifiedException(typeof(a)))
+#     return a.__dotcall_list__
+# end
 
 """
     whichmodule(::Type{T}) where T
