@@ -218,8 +218,9 @@ Return `true` if the `@dotcallify` macro has been called on `T`.
 """
 is_dotcallified(::Type{T}) where T = :__dotcall_list__ in propertynames(T, true)
 
+# I don't think we want this method.
 # TODO: The same as above, really. Reorganize this
-is_dotcallified(a) = :__dotcall_list__ in propertynames(a, true)
+# is_dotcallified(a) = :__dotcall_list__ in propertynames(a, true)
 
 macro _add_dotcalls(Type_to_dotcallify, args...)
     _Type_to_dotcallify = Core.eval(__module__, Type_to_dotcallify)
