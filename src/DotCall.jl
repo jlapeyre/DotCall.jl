@@ -207,10 +207,8 @@ julia> DotCall.dotcallified_properties(a)
 macro dotcallify(Type_to_dotcallify, args...)
     _Type_to_dotcallify = Core.eval(__module__, Type_to_dotcallify)
     is_dotcallified(_Type_to_dotcallify) && throw(AlreadyDotCallifiedException(_Type_to_dotcallify))
-    # error("Type $_Type_to_dotcallify has already been DotCall-ified. This can only be done once. " *
-    #     "Try `add_dotcalls`.")
-    code = _prep_dotcallify(Type_to_dotcallify, args...)
-    return code
+    # Generate and return code
+    _prep_dotcallify(Type_to_dotcallify, args...)
 end
 
 """
