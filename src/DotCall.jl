@@ -58,7 +58,7 @@ function _dotcallify(Type_to_dotcallify; functup=:(()), callmethod=nothing, _get
     # Declare functions in case no methods for them are yet defined
     func_decl = Expr(:block, (:(function $func end) for (sym, func) in named_tup_pairs if isa(_unesc(func), Symbol))...)
 
-    # Build a NameTuple like (f=f, g=g, ....)
+    # Build a NamedTuple like (f=f, g=g, ....)
     tuple_arg = ((:($sym = $func) for (sym, func) in named_tup_pairs)...,)
     named_tuple = Expr(:const, Expr(:(=), :FuncMap, Expr(:tuple, tuple_arg...)))
     push!(func_decl.args, named_tuple)
