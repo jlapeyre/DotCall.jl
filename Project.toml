@@ -1,7 +1,7 @@
 name = "DotCall"
 uuid = "c8efb2cb-5e3b-4fe2-bcce-5cd9f862e77b"
 authors = ["John Lapeyre <jlapeyre@users.noreply.github.com> and contributors"]
-version = "0.1.1"
+version = "0.2.0"
 
 [compat]
 julia = "1.7"
