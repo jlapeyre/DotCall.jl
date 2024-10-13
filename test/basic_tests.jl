@@ -30,5 +30,24 @@ end
     @test fieldnames(MyA) == (:data,)
     z = MyA(4.1)
     @test propertynames(z) == (:data, :sx, :x, :sin, :y, :mycos, :cf)
+    @test propertynames(z, true) == (:data, :sx, :x, :sin, :y, :mycos, :cf,
+                                  :__dotcall_list__, :__dotcall_list__expr, :__dotcall_callmethod__, :__dotcall_getproperty__, :__module__)
     @test_throws MethodError fieldnames(z)
+end
+
+@testset "dotcallified_properties" begin
+    props = dotcallified_properties(MyA)
+    @test props.sx == MyAs.sx
+    @test props.x == MyAs.x
+    @test props.cf == MyAs.cf
+    @test props.y == 3
+    @test props.sin == Base.sin
+    @test isa(props.mycos, Function)
+    @test length(props) == 6
+
+    @test_throws DotCall.NotDotCallifiedException dotcallified_properties(Int)
+    @test_throws DotCall.AlreadyDotCallifiedException @macroexpand @dotcallify MyA (sx, x)
+    @test whichmodule(MyA) == MyAs
+    @test_throws DotCall.NotDotCallifiedException whichmodule(Float64)
+    @test_throws DotCall.DotCallSyntaxException @macroexpand @dotcallify Int 3
 end
