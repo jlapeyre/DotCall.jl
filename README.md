@@ -3,8 +3,8 @@
 [![Build Status](https://github.com/jlapeyre/DotCall.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/jlapeyre/DotCall.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![Coverage](https://codecov.io/gh/jlapeyre/DotCall.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/jlapeyre/DotCall.jl)
 
-This package facilitates using the "dot notation" common in class-based object oriented langauges. It provides a macro
-`@dotcallify` which allows you to call an existing method
+This package facilitates using the "dot notation" for calling methods that is common in class-based object oriented langauges.
+It provides a macro `@dotcallify` which allows you to call an existing method.
 ```julia
 f(a::A, args...)
 ```
@@ -36,13 +36,7 @@ Then you can write either `Amod.f(a, 1, 2)` or `a.f(1, 2)`.
 
 ### Performance
 
-There is no runtime performance penalty in calling a method using dot notation.
-
-
-A requirement of design is no performance penalty. I mean I would not have brought
-this to a package if there were a performance penalty.
-And benchmarking the code in the test suite shows there is none.
-But, there may be some lurking somewhere.
+Benchmarking has not revealed any runtime performance penalty in calling a method using dot notation.
 
 For example the script [smalltest.jl](./smalltest.jl)
 ```julia
