@@ -238,13 +238,13 @@ function _prep_dotcallify(Type_to_dotcallify, args...)
         if istup(arg)
             argd[:functup] = arg
         elseif isassign(arg)
-            length(arg.args) == 2 || error("@dotcallify: Bad assignment")
+            length(arg.args) == 2 || throw(DotCallSyntaxException("@dotcallify: Bad assignment"))
             (sym, rhs) = (arg.args...,)
-            issym(sym) || error("@dotcallify: LHS is not a symbol")
-            haskey(argd, sym) || error("@dotcallify: Invalid keyword $sym")
+            issym(sym) || throw(DotCallSyntaxException("@dotcallify: LHS is not a symbol"))
+            haskey(argd, sym) || throw(DotCallSyntaxException("@dotcallify: Invalid keyword $sym"))
             argd[sym] = rhs
         else
-            error("@dotcallify: Invalid argument $arg")
+            throw(DotCallSyntaxException("@dotcallify: Invalid argument $arg"))
         end
     end
     return _dotcallify(Type_to_dotcallify; functup=argd[:functup], callmethod=argd[:callmethod], _getproperty=argd[:getproperty])
