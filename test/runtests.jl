@@ -3,6 +3,12 @@ using Test
 
 include("aqua_test.jl")
 
+# It looks like JET tries to analyze itself in v1.7
+# And it finds ambiguities. So, let's skip JET for v1.7
+if VERSION >= v"1.8"
+    include("jet_test.jl")
+end
+
 oldLOAD_PATH = copy(LOAD_PATH)
 try
     for dir in ("./MyAs", "./MyBs", "./MyCs")
