@@ -1,6 +1,8 @@
 using DotCall
 using Test
 
+include("aqua_test.jl")
+
 oldLOAD_PATH = copy(LOAD_PATH)
 try
     for dir in ("./MyAs", "./MyBs", "./MyCs")
