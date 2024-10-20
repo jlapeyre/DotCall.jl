@@ -1,4 +1,4 @@
-## The real reason for CBOOCall.jl
+## The real reason for DotCall.jl
 
 `split(",", "a,b,c")` is not really the right way to do it.
 `split` only works with strings, so it should be a class method.
@@ -6,11 +6,11 @@ We should be able to do `",".split("a,b,c")`.
 There's even a mnemonic. Think of "comma-separated values".
 Well this is a "comma split string".
 
-Now there is a way with `CBOOCall.jl`:
+Now there is a way with `DotCall.jl`:
 
 ```julia
-julia> @eval Base import CBOOCall;
-julia> @eval Base CBOOCall.@cbooify String (split,)
+julia> @eval Base import DotCall;
+julia> @eval Base DotCall.@dotcallify String (split,)
 ```
 
 Then we have
@@ -22,7 +22,7 @@ julia> ",".split("a,b,c")
 .... uh, we can fix that
 
 ```
-julia> @eval Base CBOOCall.@cbooify String (split=(x,y) -> split(y, x),)
+julia> @eval Base DotCall.@dotcallify String (split=(x,y) -> split(y, x),)
 julia> ",".split("a,b,c")
 3-element Vector{SubString{String}}:
  "a"
@@ -52,7 +52,7 @@ Of course, you have to pay for this with a performance hit, right? How much is i
 Let's pick a fast operation, and put it in the middle of a list, and swap parameter order for no reason.
 
 ```julia
-julia> @eval Base CBOOCall.@cbooify Int64 (+, /, length, xor=(x,y)->xor(y,x), floor, rand)
+julia> @eval Base DotCall.@dotcallify Int64 (+, /, length, xor=(x,y)->xor(y,x), floor, rand)
 ```
 
 The usual way
